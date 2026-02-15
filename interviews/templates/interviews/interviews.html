@@ -2,39 +2,495 @@
 
 {% block content %}
 
-<h2>Interview Session</h2>
-
-<div class="card">
-    <p><strong>Role:</strong> {{ role|title }}</p>
-    <p><strong>Difficulty:</strong> {{ difficulty|title }}</p>
+<div class="page-header">
+    <h1><i class="fas fa-clipboard-list"></i> Interview in Progress</h1>
+    <p>Answer all questions to the best of your ability</p>
 </div>
 
-<form method="POST">
+<!-- Interview Info Card -->
+<div class="card interview-info">
+    <div class="info-grid">
+        <div class="info-item">
+            <i class="fas fa-briefcase"></i>
+            <div>
+                <small>Role</small>
+                <strong>{{ role|title }}</strong>
+            </div>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-code"></i>
+            <div>
+                <small>Tech Stack</small>
+                <strong>{{ tech_stack|title }}</strong>
+            </div>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-signal"></i>
+            <div>
+                <small>Difficulty</small>
+                <strong class="difficulty-badge difficulty-{{ difficulty }}">{{ difficulty|title }}</strong>
+            </div>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-question-circle"></i>
+            <div>
+                <small>Questions</small>
+                <strong>{{ questions|length }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Bar -->
+<div class="progress-container">
+    <div class="progress-info">
+        <span>Progress</span>
+        <span id="progressText">0 of {{ questions|length }} completed</span>
+    </div>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+</div>
+
+<form method="POST" id="interviewForm">
     {% csrf_token %}
 
     {% for question in questions %}
-        <div class="card">
-            <h4>Question {{ forloop.counter }}</h4>
+        <div class="card question-card" data-question="{{ forloop.counter }}">
+            <div class="question-header">
+                <span class="question-number">Question {{ forloop.counter }}</span>
+                <span class="question-status" id="status-{{ forloop.counter0 }}">
+                    <i class="far fa-circle"></i> Unanswered
+                </span>
+            </div>
 
-            <!-- LLM Generated Question -->
-            <p>{{ question }}</p>
+            <div class="question-text">
+                <i class="fas fa-quote-left quote-icon"></i>
+                {{ question }}
+            </div>
 
-            <!-- IMPORTANT CHANGE -->
-            <textarea 
-                name="answer_{{ forloop.counter0 }}"
-                rows="4"
-                style="width:100%; padding:8px;"
-                placeholder="Type your answer here..."
-                required>
-            </textarea>
-
+            <div class="answer-section">
+                <label for="answer_{{ forloop.counter0 }}">Your Answer</label>
+                <textarea 
+                    name="answer_{{ forloop.counter0 }}"
+                    id="answer_{{ forloop.counter0 }}"
+                    rows="6"
+                    placeholder="Type your detailed answer here... Be specific and thorough."
+                    required
+                    class="answer-textarea"
+                    data-index="{{ forloop.counter0 }}">
+                </textarea>
+                <div class="character-count">
+                    <span id="count-{{ forloop.counter0 }}">0</span> characters
+                </div>
+            </div>
         </div>
     {% endfor %}
 
-    <div style="text-align:center; margin-top:20px;">
-        <button type="submit">Submit Interview</button>
+    <!-- Navigation Buttons -->
+    <div class="form-actions">
+        <a href="{% url 'interview_home' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Cancel
+        </a>
+        <button type="submit" id="submitBtn" class="btn">
+            <i class="fas fa-paper-plane"></i> Submit Interview
+        </button>
     </div>
 
 </form>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Confirm Submission</h3>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to submit your interview?</p>
+            <p>Make sure you've answered all questions thoroughly.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" id="cancelSubmit">Review Answers</button>
+            <button type="button" class="btn" id="confirmSubmit">
+                <i class="fas fa-check"></i> Submit
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .interview-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .info-item i {
+        font-size: 2rem;
+        opacity: 0.9;
+    }
+
+    .info-item small {
+        display: block;
+        opacity: 0.9;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-item strong {
+        font-size: 1.1rem;
+    }
+
+    .difficulty-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .difficulty-easy {
+        background: #10b981;
+        color: white;
+    }
+
+    .difficulty-medium {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .difficulty-hard {
+        background: #ef4444;
+        color: white;
+    }
+
+    .progress-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .progress-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .progress-bar {
+        height: 12px;
+        background: #e5e7eb;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+        width: 0%;
+        transition: width 0.5s ease;
+        border-radius: 20px;
+    }
+
+    .question-card {
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .question-number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .question-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .question-status.answered {
+        color: var(--secondary-color);
+    }
+
+    .question-status.answered i {
+        color: var(--secondary-color);
+    }
+
+    .question-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .quote-icon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: var(--primary-light);
+        opacity: 0.3;
+        font-size: 1.5rem;
+    }
+
+    .answer-section {
+        margin-top: 1.5rem;
+    }
+
+    .answer-textarea {
+        resize: vertical;
+        min-height: 150px;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .answer-textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .character-count {
+        text-align: right;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+        position: sticky;
+        bottom: 1rem;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: var(--shadow-xl);
+        animation: slideInDown 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideInDown {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        padding: 2rem 2rem 1rem;
+        text-align: center;
+    }
+
+    .modal-header i {
+        font-size: 3rem;
+        color: #f59e0b;
+        margin-bottom: 1rem;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .modal-body {
+        padding: 1rem 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .modal-footer {
+        padding: 1rem 2rem 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .question-text {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<script>
+const form = document.getElementById('interviewForm');
+const textareas = document.querySelectorAll('.answer-textarea');
+const submitBtn = document.getElementById('submitBtn');
+const modal = document.getElementById('confirmModal');
+const cancelSubmit = document.getElementById('cancelSubmit');
+const confirmSubmit = document.getElementById('confirmSubmit');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const totalQuestions = {{ questions|length }};
+
+let answeredCount = 0;
+
+// Character counter and answer tracking
+textareas.forEach(textarea => {
+    const index = textarea.dataset.index;
+    const counter = document.getElementById(`count-${index}`);
+    const status = document.getElementById(`status-${index}`);
+
+    textarea.addEventListener('input', function() {
+        const count = this.value.length;
+        counter.textContent = count;
+
+        // Update status
+        if (count > 0) {
+            if (!status.classList.contains('answered')) {
+                status.classList.add('answered');
+                status.innerHTML = '<i class="fas fa-check-circle"></i> Answered';
+                answeredCount++;
+                updateProgress();
+            }
+        } else {
+            if (status.classList.contains('answered')) {
+                status.classList.remove('answered');
+                status.innerHTML = '<i class="far fa-circle"></i> Unanswered';
+                answeredCount--;
+                updateProgress();
+            }
+        }
+    });
+
+    // Auto-save to localStorage
+    textarea.addEventListener('input', function() {
+        localStorage.setItem(`answer_${index}`, this.value);
+    });
+
+    // Restore from localStorage
+    const savedAnswer = localStorage.getItem(`answer_${index}`);
+    if (savedAnswer) {
+        textarea.value = savedAnswer;
+        textarea.dispatchEvent(new Event('input'));
+    }
+});
+
+function updateProgress() {
+    const percentage = (answeredCount / totalQuestions) * 100;
+    progressFill.style.width = percentage + '%';
+    progressText.textContent = `${answeredCount} of ${totalQuestions} completed`;
+}
+
+// Form submission with confirmation
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    modal.classList.add('show');
+});
+
+cancelSubmit.addEventListener('click', function() {
+    modal.classList.remove('show');
+});
+
+confirmSubmit.addEventListener('click', function() {
+    // Clear localStorage
+    textareas.forEach(textarea => {
+        localStorage.removeItem(`answer_${textarea.dataset.index}`);
+    });
+
+    submitBtn.innerHTML = '<span class="spinner"></span> Submitting...';
+    submitBtn.disabled = true;
+    form.submit();
+});
+
+// Close modal on outside click
+modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+        modal.classList.remove('show');
+    }
+});
+
+// Warn before leaving page
+window.addEventListener('beforeunload', function(e) {
+    if (answeredCount > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// Smooth scroll to first unanswered question
+function scrollToUnanswered() {
+    const unanswered = document.querySelector('.question-status:not(.answered)');
+    if (unanswered) {
+        unanswered.closest('.question-card').scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+        });
+    }
+}
+</script>
 
 {% endblock %}

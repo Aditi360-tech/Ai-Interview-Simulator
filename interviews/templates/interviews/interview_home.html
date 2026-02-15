@@ -2,114 +2,330 @@
 
 {% block content %}
 
-<h2>Select Interview Options</h2>
+<div class="page-header">
+    <h1><i class="fas fa-rocket"></i> Start Your Interview</h1>
+    <p>Configure your interview settings and test your knowledge</p>
+</div>
 
-<div class="card">
-    <form method="GET" action="{% url 'start_interview' %}">
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <form method="GET" action="{% url 'start_interview' %}" id="interviewForm">
 
-        <div style="margin-bottom:15px;">
-            <label for="role"><strong>Select Role:</strong></label><br>
+        <!-- Role Selection -->
+        <div class="form-group mb-3">
+            <label for="role">
+                <i class="fas fa-briefcase"></i> Select Your Role
+            </label>
             <select id="role" name="role" required>
-                <option value="">Select Role</option>
-                <option value="backend">Backend Developer</option>
-                <option value="frontend">Frontend Developer</option>
-                <option value="data">Data Analyst</option>
-                <option value="devops">DevOps Engineer</option>
-                <option value="fullstack">Full Stack Developer</option>
+                <option value="">Choose a role...</option>
+                <option value="backend">🔧 Backend Developer</option>
+                <option value="frontend">🎨 Frontend Developer</option>
+                <option value="data">📊 Data Analyst</option>
+                <option value="devops">⚙️ DevOps Engineer</option>
+                <option value="fullstack">💻 Full Stack Developer</option>
             </select>
         </div>
-        <div style="margin-bottom:15px;">
-            <label for="tech_stack"><strong>Select Specialization:</strong></label><br>
+
+        <!-- Tech Stack Selection -->
+        <div class="form-group mb-3">
+            <label for="tech_stack">
+                <i class="fas fa-code"></i> Select Specialization
+            </label>
             <select id="tech_stack" name="tech_stack" required>
-                <option value="">Select Role First</option>
-                <!-- Backend -->
-                <option value="django">Django</option>
-                <option value="nodejs">Node.js</option>
-                <option value="springboot">Spring Boot</option>
-
-                <!-- Frontend -->
-                <option value="react">React</option>
-                <option value="angular">Angular</option>
-                <option value="vue">Vue</option>
-
-                <!-- Data -->
-                <option value="sql">SQL</option>
-                <option value="python">Python (Data)</option>
-
-                <!-- DevOps -->
-                <option value="aws">AWS</option>
-                <option value="docker">Docker</option>
-
+                <option value="">Select a role first...</option>
             </select>
-        </div>
-        <div style="margin-bottom:15px;">
-            <label for="difficulty"><strong>Select Difficulty:</strong></label><br>
-            <select name="difficulty" required style="padding:6px; width:200px;">
-                <option value="">-- Select Difficulty --</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-            </select>
+            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                <i class="fas fa-info-circle"></i> Choose your tech stack after selecting a role
+            </small>
         </div>
 
-        <button type="submit">Start Interview</button>
+        <!-- Difficulty Selection -->
+        <div class="form-group mb-4">
+            <label for="difficulty">
+                <i class="fas fa-signal"></i> Select Difficulty Level
+            </label>
+            <div class="difficulty-options">
+                <label class="difficulty-card" data-difficulty="easy">
+                    <input type="radio" name="difficulty" value="easy" required>
+                    <div class="difficulty-content">
+                        <i class="fas fa-seedling"></i>
+                        <h4>Easy</h4>
+                        <p>Perfect for beginners</p>
+                    </div>
+                </label>
+
+                <label class="difficulty-card" data-difficulty="medium">
+                    <input type="radio" name="difficulty" value="medium" required>
+                    <div class="difficulty-content">
+                        <i class="fas fa-fire"></i>
+                        <h4>Medium</h4>
+                        <p>Intermediate level</p>
+                    </div>
+                </label>
+
+                <label class="difficulty-card" data-difficulty="hard">
+                    <input type="radio" name="difficulty" value="hard" required>
+                    <div class="difficulty-content">
+                        <i class="fas fa-crown"></i>
+                        <h4>Hard</h4>
+                        <p>Expert challenges</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="text-center">
+            <button type="submit" id="startBtn">
+                <i class="fas fa-play-circle"></i>
+                <span>Start Interview</span>
+            </button>
+        </div>
 
     </form>
 </div>
+
+<!-- Info Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+    <div class="info-card">
+        <div class="info-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <i class="fas fa-question-circle"></i>
+        </div>
+        <h3>Multiple Questions</h3>
+        <p>Answer a series of carefully crafted questions</p>
+    </div>
+
+    <div class="info-card">
+        <div class="info-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <i class="fas fa-brain"></i>
+        </div>
+        <h3>AI-Powered</h3>
+        <p>Get intelligent feedback on your answers</p>
+    </div>
+
+    <div class="info-card">
+        <div class="info-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <h3>Track Progress</h3>
+        <p>Monitor your improvement over time</p>
+    </div>
+</div>
+
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .difficulty-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .difficulty-card {
+        position: relative;
+        cursor: pointer;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .difficulty-card input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .difficulty-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .difficulty-card input[type="radio"]:checked + .difficulty-content {
+        color: var(--primary-color);
+    }
+
+    .difficulty-card input[type="radio"]:checked ~ .difficulty-content::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 24px;
+        height: 24px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .difficulty-card input[type="radio"]:checked ~ .difficulty-content::after {
+        content: '✓';
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .difficulty-card[data-difficulty="easy"] input[type="radio"]:checked ~ .difficulty-content {
+        border-color: #10b981;
+    }
+
+    .difficulty-card[data-difficulty="medium"] input[type="radio"]:checked ~ .difficulty-content {
+        border-color: #f59e0b;
+    }
+
+    .difficulty-card[data-difficulty="hard"] input[type="radio"]:checked ~ .difficulty-content {
+        border-color: #ef4444;
+    }
+
+    .difficulty-content {
+        position: relative;
+    }
+
+    .difficulty-content i {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .difficulty-content h4 {
+        font-size: 1.2rem;
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+    }
+
+    .difficulty-content p {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .info-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s ease;
+        animation: fadeInUp 0.6s ease;
+    }
+
+    .info-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-xl);
+    }
+
+    .info-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-size: 2rem;
+    }
+
+    .info-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .info-card p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    /* Animation delays for info cards */
+    .info-card:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .info-card:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .info-card:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+</style>
+
 <script>
-
 const techOptions = {
-
     backend: [
-        "Django",
-        "Node.js",
-        "Spring Boot"
+        { value: "django", label: "Django" },
+        { value: "nodejs", label: "Node.js" },
+        { value: "springboot", label: "Spring Boot" }
     ],
-
     frontend: [
-        "React",
-        "Angular",
-        "Vue"
+        { value: "react", label: "React" },
+        { value: "angular", label: "Angular" },
+        { value: "vue", label: "Vue.js" }
     ],
-
     data: [
-        "Python",
-        "SQL"
+        { value: "python", label: "Python (Data)" },
+        { value: "sql", label: "SQL" }
     ],
-
     devops: [
-        "AWS",
-        "Docker"
+        { value: "aws", label: "AWS" },
+        { value: "docker", label: "Docker" }
     ],
-
     fullstack: [
-        "Python + React",
-        "Java + Angular"
+        { value: "python-react", label: "Python + React" },
+        { value: "java-angular", label: "Java + Angular" }
     ]
 };
 
-document.getElementById("role").addEventListener("change", function () {
+const roleSelect = document.getElementById("role");
+const techSelect = document.getElementById("tech_stack");
+const form = document.getElementById("interviewForm");
+const startBtn = document.getElementById("startBtn");
 
+roleSelect.addEventListener("change", function() {
     const role = this.value;
-    const techDropdown = document.getElementById("tech_stack");
-
-    techDropdown.innerHTML = "";
-
+    techSelect.innerHTML = '<option value="">Choose your tech stack...</option>';
+    
     if (techOptions[role]) {
-
-        techOptions[role].forEach(function (tech) {
-
-            let option = document.createElement("option");
-            option.value = tech.toLowerCase();
-            option.text = tech;
-
-            techDropdown.appendChild(option);
-
+        techOptions[role].forEach(tech => {
+            const option = document.createElement("option");
+            option.value = tech.value;
+            option.textContent = tech.label;
+            techSelect.appendChild(option);
         });
+        
+        // Add smooth animation
+        techSelect.style.animation = 'none';
+        setTimeout(() => {
+            techSelect.style.animation = 'fadeInUp 0.4s ease';
+        }, 10);
     }
 });
 
-</script>
+// Form submission animation
+form.addEventListener("submit", function(e) {
+    startBtn.innerHTML = '<span class="spinner"></span> Loading...';
+    startBtn.disabled = true;
+});
 
+// Auto-select first tech option when available (optional UX enhancement)
+techSelect.addEventListener("focus", function() {
+    if (this.options.length === 1 && this.value === "") {
+        alert("Please select a role first!");
+        roleSelect.focus();
+    }
+});
+</script>
 
 {% endblock %}

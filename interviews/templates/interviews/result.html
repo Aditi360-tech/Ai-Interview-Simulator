@@ -2,77 +2,620 @@
 
 {% block content %}
 
-<h2>Interview Result</h2>
+<div class="page-header">
+    <h1><i class="fas fa-trophy"></i> Interview Results</h1>
+    <p>Here's how you performed</p>
+</div>
 
-<!-- Overall Score -->
-<div class="card">
-    <h3>Your Overall Score: {{ session.overall_score }}%</h3>
+<!-- Score Summary -->
+<div class="score-summary">
+    <div class="score-card main-score">
+        <div class="score-icon">
+            <i class="fas fa-star"></i>
+        </div>
+        <div class="score-content">
+            <h2>Overall Score</h2>
+            <div class="score-value">{{ session.overall_score }}%</div>
+            <div class="score-label">
+                {% if session.overall_score >= 80 %}
+                    <span class="badge badge-success"><i class="fas fa-check-circle"></i> Excellent</span>
+                {% elif session.overall_score >= 60 %}
+                    <span class="badge badge-warning"><i class="fas fa-thumbs-up"></i> Good</span>
+                {% else %}
+                    <span class="badge badge-info"><i class="fas fa-graduation-cap"></i> Keep Learning</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fas fa-question-circle"></i>
+            <div>
+                <div class="stat-value">{{ feedback|length }}</div>
+                <div class="stat-label">Questions</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <i class="fas fa-check-double"></i>
+            <div>
+                <div class="stat-value" id="passedCount">0</div>
+                <div class="stat-label">Passed (≥60%)</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <i class="fas fa-chart-line"></i>
+            <div>
+                <div class="stat-value" id="avgScore">0%</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Performance Chart -->
 <div class="card">
-    <h3>Performance Chart</h3>
+    <div class="card-header">
+        <h3><i class="fas fa-chart-bar"></i> Performance Analysis</h3>
+        <div class="chart-controls">
+            <button class="btn-small" onclick="changeChartType('bar')">
+                <i class="fas fa-chart-bar"></i> Bar
+            </button>
+            <button class="btn-small" onclick="changeChartType('line')">
+                <i class="fas fa-chart-line"></i> Line
+            </button>
+            <button class="btn-small" onclick="changeChartType('radar')">
+                <i class="fas fa-chart-area"></i> Radar
+            </button>
+        </div>
+    </div>
 
-    <div style="height:400px;">
+    <div class="chart-container">
         <canvas id="resultChart"></canvas>
     </div>
 </div>
 
-<!-- AI Feedback -->
+<!-- Detailed Feedback -->
 <div class="card">
-    <h3>AI Feedback</h3>
+    <div class="card-header">
+        <h3><i class="fas fa-comments"></i> Detailed Feedback</h3>
+    </div>
 
-    {% for fb in feedback %}
-        <div style="margin-bottom:20px;">
-            <h4>Question {{ forloop.counter }}</h4>
+    <div class="feedback-container">
+        {% for fb in feedback %}
+            <div class="feedback-item">
+                <div class="feedback-header">
+                    <div class="feedback-title">
+                        <span class="question-badge">Q{{ forloop.counter }}</span>
+                        <h4>Question {{ forloop.counter }}</h4>
+                    </div>
+                    <div class="feedback-score score-{{ fb.score|floatformat:0 }}">
+                        <div class="score-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg"
+                                    d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                                <path class="circle"
+                                    stroke-dasharray="{{ fb.score }}, 100"
+                                    d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                                <text x="18" y="20.35" class="percentage">{{ fb.score|floatformat:0 }}</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
 
-            <p><strong>Score:</strong> {{ fb.score }}</p>
-            <p><strong>Strengths:</strong> {{ fb.strengths }}</p>
-            <p><strong>Weaknesses:</strong> {{ fb.weaknesses }}</p>
-            <p><strong>Improvement:</strong> {{ fb.improvement }}</p>
+                <div class="feedback-content">
+                    <div class="feedback-section strengths">
+                        <div class="section-header">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Strengths</strong>
+                        </div>
+                        <p>{{ fb.strengths }}</p>
+                    </div>
 
-            <hr>
-        </div>
-    {% endfor %}
+                    {% if fb.weaknesses %}
+                    <div class="feedback-section weaknesses">
+                        <div class="section-header">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Areas to Improve</strong>
+                        </div>
+                        <p>{{ fb.weaknesses }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="feedback-section improvement">
+                        <div class="section-header">
+                            <i class="fas fa-lightbulb"></i>
+                            <strong>Recommendations</strong>
+                        </div>
+                        <p>{{ fb.improvement }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 </div>
+
+<!-- Action Buttons -->
+<div class="action-buttons">
+    <a href="{% url 'interview_home' %}" class="btn">
+        <i class="fas fa-redo"></i> Take Another Interview
+    </a>
+    <a href="{% url 'interview_history' %}" class="btn btn-outline">
+        <i class="fas fa-history"></i> View History
+    </a>
+    <button onclick="window.print()" class="btn btn-outline">
+        <i class="fas fa-print"></i> Print Results
+    </button>
+</div>
+
+<style>
+    .score-summary {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .main-score {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: var(--shadow-xl);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .main-score::before {
+        content: '';
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        top: -100px;
+        right: -100px;
+    }
+
+    .score-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .score-content h2 {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        opacity: 0.9;
+    }
+
+    .score-value {
+        font-size: 4rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 1rem;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .badge-success {
+        background: rgba(16, 185, 129, 0.2);
+        color: white;
+    }
+
+    .badge-warning {
+        background: rgba(245, 158, 11, 0.2);
+        color: white;
+    }
+
+    .badge-info {
+        background: rgba(59, 130, 246, 0.2);
+        color: white;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .stat-card i {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .card-header h3 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-primary);
+        font-size: 1.5rem;
+    }
+
+    .chart-controls {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-small {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        background: var(--border-color);
+        color: var(--text-primary);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-small:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .feedback-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .feedback-item {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border-left: 4px solid var(--primary-color);
+        transition: all 0.3s ease;
+    }
+
+    .feedback-item:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateX(4px);
+    }
+
+    .feedback-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .feedback-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .question-badge {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .feedback-title h4 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .score-circle {
+        width: 80px;
+        height: 80px;
+    }
+
+    .circular-chart {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .circle-bg {
+        fill: none;
+        stroke: #e5e7eb;
+        stroke-width: 2.8;
+    }
+
+    .circle {
+        fill: none;
+        stroke-width: 2.8;
+        stroke-linecap: round;
+        animation: progress 1s ease-out forwards;
+    }
+
+    .score-0 .circle, .score-10 .circle, .score-20 .circle, .score-30 .circle, .score-40 .circle, .score-50 .circle {
+        stroke: #ef4444;
+    }
+
+    .score-60 .circle, .score-70 .circle {
+        stroke: #f59e0b;
+    }
+
+    .score-80 .circle, .score-90 .circle, .score-100 .circle {
+        stroke: #10b981;
+    }
+
+    @keyframes progress {
+        from {
+            stroke-dasharray: 0 100;
+        }
+    }
+
+    .percentage {
+        fill: var(--text-primary);
+        font-size: 0.5em;
+        font-weight: 700;
+        text-anchor: middle;
+    }
+
+    .feedback-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .feedback-section {
+        padding: 1rem;
+        border-radius: 8px;
+        background: white;
+    }
+
+    .feedback-section.strengths {
+        border-left: 3px solid #10b981;
+    }
+
+    .feedback-section.weaknesses {
+        border-left: 3px solid #ef4444;
+    }
+
+    .feedback-section.improvement {
+        border-left: 3px solid #3b82f6;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .strengths .section-header i {
+        color: #10b981;
+    }
+
+    .weaknesses .section-header i {
+        color: #ef4444;
+    }
+
+    .improvement .section-header i {
+        color: #3b82f6;
+    }
+
+    .feedback-section p {
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .score-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-controls {
+            flex-direction: column;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+
+    @media print {
+        .navbar, .action-buttons, .chart-controls {
+            display: none;
+        }
+
+        .card {
+            page-break-inside: avoid;
+        }
+    }
+</style>
 
 {% endblock %}
 
-
 {% block scripts %}
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
     const canvas = document.getElementById('resultChart');
     const ctx = canvas.getContext('2d');
 
     const labels = {{ labels_json|safe }};
     const scores = {{ scores_json|safe }};
 
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Question Score',
-                data: scores,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
+    // Calculate stats
+    const passedCount = scores.filter(s => s >= 60).length;
+    const avgScore = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+
+    document.getElementById('passedCount').textContent = passedCount;
+    document.getElementById('avgScore').textContent = avgScore + '%';
+
+    let currentChart = null;
+
+    function createChart(type) {
+        if (currentChart) {
+            currentChart.destroy();
+        }
+
+        const config = {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Score (%)',
+                    data: scores,
+                    backgroundColor: type === 'radar' ? 'rgba(99, 102, 241, 0.2)' : scores.map(score => {
+                        if (score >= 80) return 'rgba(16, 185, 129, 0.8)';
+                        if (score >= 60) return 'rgba(245, 158, 11, 0.8)';
+                        return 'rgba(239, 68, 68, 0.8)';
+                    }),
+                    borderColor: type === 'radar' ? 'rgb(99, 102, 241)' : scores.map(score => {
+                        if (score >= 80) return 'rgb(16, 185, 129)';
+                        if (score >= 60) return 'rgb(245, 158, 11)';
+                        return 'rgb(239, 68, 68)';
+                    }),
+                    borderWidth: 2,
+                    fill: type === 'radar',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return 'Score: ' + context.parsed.y + '%';
+                            }
+                        }
+                    }
+                },
+                scales: type === 'radar' ? {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                } : {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
                 }
             }
-        }
-    });
+        };
 
+        currentChart = new Chart(ctx, config);
+    }
+
+    // Initialize with bar chart
+    createChart('bar');
+
+    // Make changeChartType available globally
+    window.changeChartType = function(type) {
+        createChart(type);
+    };
+
+    // Animate score circles
+    const circles = document.querySelectorAll('.circular-chart .circle');
+    circles.forEach(circle => {
+        const dashArray = circle.getAttribute('stroke-dasharray');
+        circle.style.strokeDasharray = '0 100';
+        setTimeout(() => {
+            circle.style.strokeDasharray = dashArray;
+        }, 500);
+    });
 });
 </script>
-
 {% endblock %}
